@@ -1,0 +1,33 @@
+# Configuration file for the AutoUpdater plugin.
+
+# How often should we check plugins for updates?
+checkInterval: 12
+
+# In what time unit is the above value provided in?
+# Valid values: SECONDS, MINUTES, HOURS, DAYS
+checkTimeUnit: HOURS
+
+# How long should we wait until we try to update another plugin during an update cycle?
+pluginUpdateInterval: 1
+
+# In what time unit is the above value provided in?
+# Valid values: SECONDS, MINUTES, HOURS, DAYS
+pluginUpdateUnit: MINUTES
+
+# What plugins should we auto-update with GitHub?
+
+## Note: The plugin will maintain the plugin java archive for you, having a JAR of the same plugin present
+## in the plugins folder will break this plugin
+
+plugins:
+  ## Format:
+  ## - "pluginDeveloper:repoName"
+  ## Example:
+  - "ViaVersion:ViaVersion"
+  - "ViaVersion:ViaBackwards"
+
+########################### THESE ARE FOR THE PLUGIN'S USE ONLY! DO NOT CHANGE! ###########################
+
+lastCheckedTimestamp: 0000000000000000
+
+lastDownloadedVersions:
