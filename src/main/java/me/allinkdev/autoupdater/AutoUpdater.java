@@ -38,13 +38,11 @@ public final class AutoUpdater extends JavaPlugin {
 	@Override
 	public void onLoad() {
 		final Path dataFolder = getDataFolder().toPath();
-		final String tempDirectoryPath = dataFolder.resolve("tmp").toString();
-		final File tempDirectoryFile = new File(tempDirectoryPath);
+		final File tempDirectoryFile = dataFolder.resolve("tmp").toFile();
 
 		pluginDirectory = dataFolder.resolve("subplugins");
 
-		final String subPluginsPath = dataFolder.toString();
-		final File subPluginsFile = new File(subPluginsPath);
+		final File subPluginsFile = pluginDirectory.toFile();
 
 		if (!tempDirectoryFile.exists()) {
 			tempDirectoryFile.mkdirs();
