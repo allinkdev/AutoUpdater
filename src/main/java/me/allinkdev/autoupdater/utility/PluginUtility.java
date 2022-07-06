@@ -81,6 +81,7 @@ public class PluginUtility {
 			throw new InvalidPluginException(file.getName());
 		}
 
+		plugin.onLoad();
 		PLUGIN_MANAGER.enablePlugin(plugin);
 		return plugin;
 	}
