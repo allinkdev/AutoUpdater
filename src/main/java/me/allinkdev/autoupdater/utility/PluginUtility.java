@@ -71,9 +71,7 @@ public class PluginUtility {
 	public static Plugin load(File file) throws InvalidPluginException, InvalidDescriptionException {
 		final Plugin plugin = Bukkit.getPluginManager().loadPlugin(file);
 
-		if (plugin == null) {
-			throw new InvalidPluginException(file.getName());
-		}
+		assert plugin != null : "Plugin " + file.getName() + " was null!";
 
 		plugin.onLoad();
 		PLUGIN_MANAGER.enablePlugin(plugin);

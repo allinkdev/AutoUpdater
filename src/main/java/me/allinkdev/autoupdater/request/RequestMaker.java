@@ -105,11 +105,8 @@ public class RequestMaker {
 			}
 		}
 
-		if (selectedAsset == null) {
-			throw new NullPointerException(
-				"Release %s for %s is null.".formatted(release.getTagName(), identity.get()));
-		}
-
+		assert selectedAsset != null : "Release " + release.getName() + " for " + identity.get();
+		
 		return downloadAsset(selectedAsset);
 	}
 
