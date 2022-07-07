@@ -1,10 +1,10 @@
-package me.allinkdev.autoupdater;
+package me.allinkdev.autoupdater.paper;
 
 import java.io.File;
 import lombok.Data;
-import me.allinkdev.autoupdater.artifact.ArtifactIdentity;
-import me.allinkdev.autoupdater.request.RequestMaker;
-import me.allinkdev.autoupdater.utility.PluginUtility;
+import me.allinkdev.autoupdater.common.artifact.ArtifactIdentity;
+import me.allinkdev.autoupdater.common.request.RequestMaker;
+import me.allinkdev.autoupdater.paper.utility.PluginUtility;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;

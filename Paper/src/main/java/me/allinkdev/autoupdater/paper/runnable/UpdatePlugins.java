@@ -1,22 +1,20 @@
-package me.allinkdev.autoupdater.runnable;
+package me.allinkdev.autoupdater.paper.runnable;
 
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
-import me.allinkdev.autoupdater.AutoUpdater;
-import me.allinkdev.autoupdater.ManagedPlugin;
-import me.allinkdev.autoupdater.artifact.ArtifactIdentity;
-import me.allinkdev.autoupdater.request.RequestMaker;
-import me.allinkdev.autoupdater.response.Release;
+import me.allinkdev.autoupdater.common.artifact.ArtifactIdentity;
+import me.allinkdev.autoupdater.common.request.RequestMaker;
+import me.allinkdev.autoupdater.common.response.Release;
+import me.allinkdev.autoupdater.common.runnable.UpdateTask;
+import me.allinkdev.autoupdater.paper.Main;
+import me.allinkdev.autoupdater.paper.ManagedPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @AllArgsConstructor
-public class UpdatePlugins implements Runnable {
+public class UpdatePlugins extends UpdateTask {
 
-	private final Logger logger = LoggerFactory.getLogger("PluginUpdater/Update Task");
-	private final AutoUpdater plugin;
+	private final Main plugin;
 
 	@Override
 	public void run() {
@@ -37,11 +35,13 @@ public class UpdatePlugins implements Runnable {
 			try {
 				latestRelease = requestMaker.getLatestRelease();
 			} catch (Exception e) {
-				throw new RuntimeException("Error checking release information for %s.".formatted(identity), e);
+				throw new RuntimeException(
+					"Error checking release information for %s.".formatted(identity), e);
 			}
 
 			final String releaseTag = latestRelease.getName();
-			final String lastDownloadedTag = lastDownloadedVersions.getOrDefault(identity.getArtifactName(), "");
+			final String lastDownloadedTag = lastDownloadedVersions.getOrDefault(
+				identity.getArtifactName(), "");
 
 			if (lastDownloadedTag.equalsIgnoreCase(releaseTag)) {
 				logger.info("Already downloaded latest release of {} (remote: {}, server: {})!",
@@ -50,14 +50,16 @@ public class UpdatePlugins implements Runnable {
 				continue;
 			}
 
-			logger.info("Downloading new release of {} (remote has version {} while server has {})...",
+			logger.info(
+				"Downloading new release of {} (remote has version {} while server has {})...",
 				stringifiedIdentity, releaseTag,
 				lastDownloadedTag);
 
 			try {
-				requestMaker.downloadRelease(latestRelease);
+				requestMaker.downloadRelease(latestRelease, plugin.getPluginDirectory());
 			} catch (Exception e) {
-				logger.warn("Exception while trying to download plugin {}!", stringifiedIdentity, e);
+				logger.warn("Exception while trying to download plugin {}!", stringifiedIdentity,
+					e);
 			}
 
 			lastDownloadedVersions.put(identity.getArtifactName(), releaseTag);

@@ -23,4 +23,4 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Execute Gradle build
-        run: ./gradlew clean reobfJar
+        run: ./gradlew clean build

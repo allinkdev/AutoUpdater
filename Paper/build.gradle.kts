@@ -3,9 +3,11 @@ plugins {
     id("net.minecrell.plugin-yml.bukkit") version "0.5.2"
     id("xyz.jpenilla.run-paper") version "1.0.6"
     id("io.papermc.paperweight.userdev") version "1.3.7"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-val paperVersion = project.property("paper_version").toString()
+val minecraftVersion = project.property("minecraft_version").toString()
+val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
 
 repositories {
     maven {
@@ -28,6 +30,8 @@ repositories {
 dependencies {
     paperDevBundle(paperVersion)
 
+    implementation(project(":Common"))
+
     compileOnly("org.projectlombok:lombok:1.18.24")
     annotationProcessor("org.projectlombok:lombok:1.18.24")
 
@@ -36,13 +40,33 @@ dependencies {
 }
 
 tasks {
+    assemble {
+        dependsOn(reobfJar)
+    }
+
     jar {
+        archiveBaseName.set("AutoUpdater")
+        archiveAppendix.set(project.name)
+
         from("LICENSE")
+    }
+
+    shadowJar {
+        archiveBaseName.set("AutoUpdater")
+        archiveAppendix.set(project.name)
+
+        from("LICENSE")
+    }
+
+    reobfJar {
+        dependsOn(shadowJar)
+
+        outputJar.set(layout.buildDirectory.file("libs/AutoUpdater-${project.name}-${project.version}.jar"))
     }
 }
 
 group = "me.allinkdev"
-version = "1.0-SNAPSHOT"
+version = project.property("project_version").toString()
 description = "Automatically update your open-source Paper plugins."
 java.sourceCompatibility = JavaVersion.VERSION_17
 
@@ -54,8 +78,10 @@ tasks.withType<JavaCompile>() {
 bukkit {
     name = "AutoUpdater"
     version = rootProject.version.toString()
-    main = "me.allinkdev.autoupdater.AutoUpdater"
+    main = "me.allinkdev.autoupdater.paper.Main"
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
     author = "Allink"
     description = project.description
+    version = project.version.toString()
+    apiVersion = minecraftVersion
 }

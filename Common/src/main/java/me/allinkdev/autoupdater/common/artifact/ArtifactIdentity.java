@@ -1,4 +1,4 @@
-package me.allinkdev.autoupdater.artifact;
+package me.allinkdev.autoupdater.common.artifact;
 
 import lombok.Builder;
 import lombok.Data;

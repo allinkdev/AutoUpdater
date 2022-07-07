@@ -1,4 +1,4 @@
-package me.allinkdev.autoupdater.request;
+package me.allinkdev.autoupdater.common.request;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -14,32 +14,36 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import me.allinkdev.autoupdater.AutoUpdater;
-import me.allinkdev.autoupdater.artifact.ArtifactIdentity;
-import me.allinkdev.autoupdater.response.Asset;
-import me.allinkdev.autoupdater.response.Release;
+import lombok.NonNull;
+import me.allinkdev.autoupdater.common.artifact.ArtifactIdentity;
+import me.allinkdev.autoupdater.common.response.Asset;
+import me.allinkdev.autoupdater.common.response.Release;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@AllArgsConstructor
 public class RequestMaker {
 
+	private static final Path TEMPORARY_DIRECTORY = Path.of(System.getProperty("java.io.tmpdir"));
 	private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 	private static final Gson GSON = new GsonBuilder()
 		.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
 		.create();
-	private static final AutoUpdater UPDATER = AutoUpdater.getInstance();
-	private static final Logger LOGGER = UPDATER.getSLF4JLogger();
-	private static final Path PLUGIN_DIRECTORY = UPDATER.getPluginDirectory();
+	private final Logger LOGGER;
 	private final ArtifactIdentity identity;
 
+	public RequestMaker(@NonNull ArtifactIdentity identity) {
+		this.identity = identity;
+
+		LOGGER = LoggerFactory.getLogger("Request Maker/" + this.identity.get());
+	}
 
 	public Release getLatestRelease() throws IOException, InterruptedException {
 		LOGGER.info("Discovering latest release of {}", identity.get());
 
 		final HttpRequest request = HttpRequest.newBuilder()
 			.GET()
-			.uri(URI.create("https://api.github.com/repos/" + identity.getGroupName() + "/" + identity.getArtifactName()
+			.uri(URI.create("https://api.github.com/repos/" + identity.getGroupName() + "/"
+				+ identity.getArtifactName()
 				+ "/releases/latest"))
 			.build();
 
@@ -52,15 +56,22 @@ public class RequestMaker {
 		return release;
 	}
 
-	public Path downloadAsset(Asset asset) throws IOException, InterruptedException {
-		return downloadAsset(asset.getBrowserDownloadUrl());
+	public Path downloadAsset(@NonNull String url, @NonNull Path directory)
+		throws IOException, InterruptedException {
+		return downloadAsset(URI.create(url), directory);
 	}
 
-	public Path downloadAsset(String url) throws IOException, InterruptedException {
-		return downloadAsset(URI.create(url));
+	public Path downloadAsset(@NonNull String url, @NonNull Path directory,
+		@NonNull Path temporaryDirectory) throws IOException, InterruptedException {
+		return downloadAsset(URI.create(url), directory, temporaryDirectory);
 	}
 
-	private URI getRealUri(URI redirectingUri) throws IOException, InterruptedException {
+	public Path downloadAsset(@NonNull URI uri, @NonNull Path directory)
+		throws IOException, InterruptedException {
+		return downloadAsset(uri, directory, TEMPORARY_DIRECTORY);
+	}
+
+	private URI getRealUri(@NonNull URI redirectingUri) throws IOException, InterruptedException {
 		final HttpRequest request = HttpRequest.newBuilder()
 			.GET()
 			.uri(redirectingUri)
@@ -71,9 +82,11 @@ public class RequestMaker {
 		return URI.create(response.headers().firstValue("location").orElseThrow());
 	}
 
-	public Path downloadAsset(URI uri) throws IOException, InterruptedException {
+	public Path downloadAsset(@NonNull URI uri, @NonNull Path directory,
+		@NonNull Path temporaryDirectory)
+		throws IOException, InterruptedException {
 		final String outputName = identity.getArtifactName() + ".jar";
-		final Path outputPath = PLUGIN_DIRECTORY.resolve(outputName);
+		final Path outputPath = directory.resolve(outputName);
 		LOGGER.info("Downloading {} (of {}) to {}...", uri.toString(), identity.get(), outputName);
 
 		final HttpRequest request = HttpRequest.newBuilder()
@@ -81,10 +94,11 @@ public class RequestMaker {
 			.uri(getRealUri(uri))
 			.build();
 
-		final Path tempDirectory = AutoUpdater.getInstance().getDataFolder().toPath().resolve("tmp");
-		final Path tempName = tempDirectory.resolve(Paths.get(uri.getPath()).getFileName().toString());
-		final HttpResponse<Path> file = HTTP_CLIENT.send(request, BodyHandlers.ofFileDownload(tempDirectory,
-			StandardOpenOption.WRITE, StandardOpenOption.CREATE));
+		final Path tempName = temporaryDirectory.resolve(
+			Paths.get(uri.getPath()).getFileName().toString());
+		final HttpResponse<Path> file = HTTP_CLIENT.send(request,
+			BodyHandlers.ofFileDownload(temporaryDirectory,
+				StandardOpenOption.WRITE, StandardOpenOption.CREATE));
 
 		Files.move(tempName, outputPath);
 
@@ -92,7 +106,13 @@ public class RequestMaker {
 		return file.body();
 	}
 
-	public Path downloadRelease(Release release) throws IOException, InterruptedException {
+	public Path downloadRelease(@NonNull Release release, @NonNull Path directory)
+		throws IOException, InterruptedException {
+		return downloadRelease(release, directory, TEMPORARY_DIRECTORY);
+	}
+
+	public Path downloadRelease(@NonNull Release release, @NonNull Path directory,
+		@NonNull Path temporaryDirectory) throws IOException, InterruptedException {
 		final List<Asset> assets = release.getAssets();
 
 		Asset selectedAsset = null;
@@ -106,16 +126,17 @@ public class RequestMaker {
 		}
 
 		assert selectedAsset != null : "Release " + release.getName() + " for " + identity.get();
-		
-		return downloadAsset(selectedAsset);
+
+		return downloadAsset(selectedAsset.getBrowserDownloadUrl(), directory, temporaryDirectory);
 	}
 
-	public Path downloadLatestRelease() throws IOException, InterruptedException, NullPointerException {
+	public Path downloadLatestRelease(@NonNull Path directory, @NonNull Path temporaryDirectory)
+		throws IOException, InterruptedException, NullPointerException {
 		LOGGER.info("Downloading latest release of {}...", identity.get());
 
 		final Release latestRelease = getLatestRelease();
 
-		final Path path = downloadRelease(latestRelease);
+		final Path path = downloadRelease(latestRelease, directory, temporaryDirectory);
 
 		LOGGER.info("Downloaded latest release of {}!", identity.get());
 

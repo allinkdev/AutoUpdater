@@ -1,16 +1,15 @@
-package me.allinkdev.autoupdater.utility;
+package me.allinkdev.autoupdater.common.utility;
 
 import com.google.common.reflect.ClassPath;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.bukkit.Bukkit;
 
 @SuppressWarnings("all")
 public class ReflectionUtility {
 
-	private static final ClassLoader classLoader = Bukkit.class.getClassLoader();
+	private static final ClassLoader classLoader = ReflectionUtility.class.getClassLoader();
 	private static final ClassPath classPath;
 
 	static {

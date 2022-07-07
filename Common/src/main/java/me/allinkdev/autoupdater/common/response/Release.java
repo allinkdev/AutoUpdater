@@ -1,4 +1,4 @@
-package me.allinkdev.autoupdater.response;
+package me.allinkdev.autoupdater.common.response;
 
 import java.util.List;
 import lombok.Data;

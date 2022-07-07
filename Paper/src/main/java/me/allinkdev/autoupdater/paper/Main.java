@@ -1,4 +1,4 @@
-package me.allinkdev.autoupdater;
+package me.allinkdev.autoupdater.paper;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -11,18 +11,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
-import me.allinkdev.autoupdater.artifact.ArtifactIdentity;
-import me.allinkdev.autoupdater.response.Release;
-import me.allinkdev.autoupdater.runnable.UpdatePlugins;
-import me.allinkdev.autoupdater.utility.PluginUtility;
+import me.allinkdev.autoupdater.common.artifact.ArtifactIdentity;
+import me.allinkdev.autoupdater.common.response.Release;
+import me.allinkdev.autoupdater.paper.runnable.UpdatePlugins;
+import me.allinkdev.autoupdater.paper.utility.PluginUtility;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 
-public final class AutoUpdater extends JavaPlugin {
+public final class Main extends JavaPlugin {
 
 	private static ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = null;
-	private static AutoUpdater INSTANCE;
+	private static Main INSTANCE;
+
 	@Getter
 	private final List<ManagedPlugin> managedPlugins = new ArrayList<>();
 	private String configurationLocation;
@@ -31,22 +32,17 @@ public final class AutoUpdater extends JavaPlugin {
 	@Getter
 	private Path pluginDirectory;
 
-	public static AutoUpdater getInstance() {
+	public static Main getInstance() {
 		return INSTANCE;
 	}
 
 	@Override
 	public void onLoad() {
 		final Path dataFolder = getDataFolder().toPath();
-		final File tempDirectoryFile = dataFolder.resolve("tmp").toFile();
 
 		pluginDirectory = dataFolder.resolve("subplugins");
 
 		final File subPluginsFile = pluginDirectory.toFile();
-
-		if (!tempDirectoryFile.exists()) {
-			tempDirectoryFile.mkdirs();
-		}
 
 		if (!subPluginsFile.exists()) {
 			subPluginsFile.mkdirs();
@@ -80,7 +76,8 @@ public final class AutoUpdater extends JavaPlugin {
 
 	public void schedulePluginUpdates() {
 		final long configuredInterval = configuration.getLong("checkInterval");
-		final TimeUnit configuredIntervalTimeUnit = TimeUnit.valueOf(configuration.getString("checkTimeUnit"));
+		final TimeUnit configuredIntervalTimeUnit = TimeUnit.valueOf(
+			configuration.getString("checkTimeUnit"));
 
 		if (SCHEDULED_EXECUTOR_SERVICE != null) {
 			SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
@@ -88,7 +85,8 @@ public final class AutoUpdater extends JavaPlugin {
 
 		SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
 
-		SCHEDULED_EXECUTOR_SERVICE.scheduleAtFixedRate(new UpdatePlugins(this), configuredInterval, configuredInterval,
+		SCHEDULED_EXECUTOR_SERVICE.scheduleAtFixedRate(new UpdatePlugins(this), configuredInterval,
+			configuredInterval,
 			configuredIntervalTimeUnit);
 	}
 
@@ -151,14 +149,16 @@ public final class AutoUpdater extends JavaPlugin {
 				final ArtifactIdentity identity = managedPlugin.getArtifactIdentity();
 				logger.info("Downloading new plugin {}...", identity.get());
 				try {
-					final Release latestRelease = managedPlugin.getRequestMaker().getLatestRelease();
+					final Release latestRelease = managedPlugin.getRequestMaker()
+						.getLatestRelease();
 					final Map<String, String> lastDownloadedPluginVersions = getLastDownloadedVersions();
 
-					lastDownloadedPluginVersions.put(identity.getArtifactName(), latestRelease.getTagName());
+					lastDownloadedPluginVersions.put(identity.getArtifactName(),
+						latestRelease.getTagName());
 
 					saveLastDownloadedVersions(lastDownloadedPluginVersions);
 
-					managedPlugin.getRequestMaker().downloadRelease(latestRelease);
+					managedPlugin.getRequestMaker().downloadRelease(latestRelease, pluginDirectory);
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}

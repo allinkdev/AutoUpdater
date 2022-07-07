@@ -6,3 +6,5 @@ pluginManagement {
 }
 
 rootProject.name = "AutoUpdater"
+include("Paper")
+include("Common")

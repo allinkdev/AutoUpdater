@@ -1,4 +1,4 @@
-package me.allinkdev.autoupdater.utility;
+package me.allinkdev.autoupdater.paper.utility;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
@@ -10,8 +10,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import me.allinkdev.autoupdater.AutoUpdater;
-import me.allinkdev.autoupdater.artifact.ArtifactIdentity;
+import me.allinkdev.autoupdater.common.artifact.ArtifactIdentity;
+import me.allinkdev.autoupdater.common.utility.ReflectionUtility;
+import me.allinkdev.autoupdater.paper.Main;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
@@ -35,7 +36,7 @@ public class PluginUtility {
 	private static final SimplePluginManager PLUGIN_MANAGER = (SimplePluginManager) Bukkit.getPluginManager();
 	private static final Class<? extends SimplePluginManager> PLUGIN_MANAGER_CLASS = PLUGIN_MANAGER.getClass();
 	private static final Set<Class<?>> EVENTS;
-	private static final Path PLUGIN_DIRECTORY = AutoUpdater.getInstance().getPluginDirectory();
+	private static final Path PLUGIN_DIRECTORY = Main.getInstance().getPluginDirectory();
 
 	static {
 		try {
@@ -63,12 +64,15 @@ public class PluginUtility {
 		return load(pluginFile);
 	}
 
-	public static File getPluginFile(Plugin plugin) throws NoSuchFieldException, IllegalAccessException {
-		final PluginClassLoader classLoader = (PluginClassLoader) plugin.getClass().getClassLoader();
+	public static File getPluginFile(Plugin plugin)
+		throws NoSuchFieldException, IllegalAccessException {
+		final PluginClassLoader classLoader = (PluginClassLoader) plugin.getClass()
+			.getClassLoader();
 		return (File) PluginClassLoader.class.getDeclaredField("file").get(classLoader);
 	}
 
-	public static Plugin load(File file) throws InvalidPluginException, InvalidDescriptionException {
+	public static Plugin load(File file)
+		throws InvalidPluginException, InvalidDescriptionException {
 		final Plugin plugin = Bukkit.getPluginManager().loadPlugin(file);
 
 		assert plugin != null : "Plugin " + file.getName() + " was null!";
@@ -115,7 +119,8 @@ public class PluginUtility {
 	private static List<HandlerList> getHandlers()
 		throws NoSuchMethodException {
 		final List<HandlerList> handlers = new ArrayList<>();
-		final Method getEventListenersMethod = PLUGIN_MANAGER_CLASS.getDeclaredMethod("getEventListeners",
+		final Method getEventListenersMethod = PLUGIN_MANAGER_CLASS.getDeclaredMethod(
+			"getEventListeners",
 			Class.class);
 
 		EVENTS
