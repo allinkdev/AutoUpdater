@@ -55,7 +55,7 @@ bukkit {
     name = "AutoUpdater"
     version = rootProject.version.toString()
     main = "me.allinkdev.autoupdater.AutoUpdater"
-    load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.STARTUP
+    load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
     author = "Allink"
     description = project.description
 }
