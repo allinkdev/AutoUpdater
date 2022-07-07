@@ -3,7 +3,6 @@ package me.allinkdev.autoupdater.utility;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
 import java.io.File;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import me.allinkdev.autoupdater.AutoUpdater;
 import me.allinkdev.autoupdater.artifact.ArtifactIdentity;
-import net.minecraft.commands.CommandListenerWrapper;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -31,8 +30,8 @@ import org.bukkit.plugin.java.PluginClassLoader;
 public class PluginUtility {
 
 	private static final MinecraftServer SERVER = MinecraftServer.getServer();
-	private static final CommandDispatcher<CommandListenerWrapper> COMMAND_DISPATCHER;
-	private static final CommandNode<CommandListenerWrapper> ROOT_COMMAND_NODE;
+	private static final CommandDispatcher<CommandSourceStack> COMMAND_DISPATCHER;
+	private static final CommandNode<CommandSourceStack> ROOT_COMMAND_NODE;
 	private static final SimplePluginManager PLUGIN_MANAGER = (SimplePluginManager) Bukkit.getPluginManager();
 	private static final Class<? extends SimplePluginManager> PLUGIN_MANAGER_CLASS = PLUGIN_MANAGER.getClass();
 	private static final Set<Class<?>> EVENTS;
@@ -40,12 +39,7 @@ public class PluginUtility {
 
 	static {
 		try {
-			final Field field = net.minecraft.commands.CommandDispatcher.class.getDeclaredField(
-				"g");
-
-			field.setAccessible(true);
-
-			COMMAND_DISPATCHER = (CommandDispatcher<CommandListenerWrapper>) field.get(SERVER.vanillaCommandDispatcher);
+			COMMAND_DISPATCHER = SERVER.vanillaCommandDispatcher.getDispatcher();
 			ROOT_COMMAND_NODE = COMMAND_DISPATCHER.getRoot();
 		} catch (Exception e) {
 			throw new RuntimeException(e);

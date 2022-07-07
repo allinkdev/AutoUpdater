@@ -1,6 +1,0 @@
-name: AutoUpdater
-version: '${project.version}'
-main: me.allinkdev.autoupdater.AutoUpdater
-api-version: 1.19
-load: STARTUP
-description: Auto update plugins from GitHub.
