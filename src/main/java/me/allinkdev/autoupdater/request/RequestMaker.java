@@ -98,7 +98,8 @@ public class RequestMaker {
 		Asset selectedAsset = null;
 
 		for (Asset asset : assets) {
-			if (asset.getContentType().equals("application/java-archive")) {
+			if (asset.getContentType().equals("application/java-archive") || (asset.getContentType()
+				.equals("application/octet-stream") && asset.getName().endsWith(".jar"))) {
 				selectedAsset = asset;
 				break;
 			}
