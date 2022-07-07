@@ -1,6 +1,10 @@
 package me.allinkdev.autoupdater.paper;
 
+import com.google.common.io.Resources;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,15 +35,16 @@ public final class Main extends JavaPlugin {
 	private FileConfiguration configuration;
 	@Getter
 	private Path pluginDirectory;
+	private Path dataFolder;
 
 	public static Main getInstance() {
 		return INSTANCE;
 	}
 
+	@SuppressWarnings("UnstableApiUsage")
 	@Override
 	public void onLoad() {
-		final Path dataFolder = getDataFolder().toPath();
-
+		dataFolder = getDataFolder().toPath();
 		pluginDirectory = dataFolder.resolve("subplugins");
 
 		final File subPluginsFile = pluginDirectory.toFile();
@@ -48,7 +53,23 @@ public final class Main extends JavaPlugin {
 			subPluginsFile.mkdirs();
 		}
 
-		configurationLocation = dataFolder.resolve("config.yml").toString();
+		final Path configurationPath = dataFolder.resolve("config.yml");
+		final File configurationFile = configurationPath.toFile();
+
+		configurationLocation = configurationPath.toString();
+
+		if (!configurationFile.exists()) {
+			try {
+				final URL resourceUrl = this.getClassLoader().getResource("config.yml");
+
+				assert resourceUrl != null;
+
+				Resources.copy(resourceUrl,
+					new FileOutputStream(configurationFile));
+			} catch (IOException e) {
+				throw new RuntimeException("Unable to save default configuration for plugin!", e);
+			}
+		}
 
 		getConfig().options().copyDefaults(true);
 		saveConfig();
